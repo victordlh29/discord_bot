@@ -30,7 +30,7 @@ if not exist %CACHE_FILE% (
         pause
         exit /b 1
     )
-    echo %JUSTRUNMY_URL% > %CACHE_FILE%
+    >%CACHE_FILE% echo %JUSTRUNMY_URL%
     echo [OK] URL guardada. Proxima vez solo haz doble clic.
     echo.
 ) else (
@@ -58,6 +58,8 @@ if %errorlevel% equ 0 (
     echo ==========================================
     echo.
     echo  Revisa los logs: https://justrunmy.app
+    echo.
+    echo  Sugerencia: git push origin main (para GitHub)
     echo.
 ) else (
     echo.

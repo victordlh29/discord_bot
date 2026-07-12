@@ -468,7 +468,7 @@ Se ejecuta automáticamente en:
 | **Dashboard** | `npm ci` → `npm run lint` → `npx tsc --noEmit` → `npm test` (36 tests) |
 | **Total (backend + dashboard)** | **314 tests** | ✅ |
 
-Ambos jobs corren en `ubuntu-latest` con Node.js 22 y caché de npm.
+Ambos jobs corren en `ubuntu-latest` con Node.js 24 y caché de npm.
 
 ### Pendiente
 - [x] **Configurar Discord OAuth** — registrar `http://localhost:3000/auth/callback` como Redirect URI en el Discord Developer Portal
@@ -476,10 +476,12 @@ Ambos jobs corren en `ubuntu-latest` con Node.js 22 y caché de npm.
 - [x] **XP condicional por canal de voz** — si el bot está en un canal de voz con el usuario, solo da XP por voz (no por texto). Si el bot NO está en ningún canal de voz, solo da XP por texto.
 - [x] **Buscador en /play** — `/play` ahora muestra hasta 10 resultados en un menú desplegable para elegir, en vez de reproducir el primero. URLs van directo.
 - [x] **Extractor de música actualizado** — `loadDefault()` deprecado reemplazado por `loadMulti(DefaultExtractors)`
-- [ ] Inicializar git: `git init`
-- [ ] Conectar con GitHub: `git remote add origin <url>`
-- [ ] Hacer commit y push para ver el CI ejecutándose
-- [ ] **Probar multi-sesión** — verificar que 2+ usuarios puedan iniciar sesión simultáneamente sin bloqueos ni conflictos
+- [x] **Git inicializado** — `.git` estaba en `C:\Users\Matrix` (home). Eliminado y re-inicializado dentro del proyecto.
+- [x] **Repositorio conectado a GitHub** — `https://github.com/victordlh29/discord_bot.git`
+- [x] **Rama renombrada a `main`** — de `master` a `main`. Default branch actualizada en GitHub.
+- [x] **CI/CD pipeline funcionando** — 2 jobs (Backend + Dashboard) pasan correctamente en GitHub Actions.
+- [x] **CI fix: Node 22 → 24** — lock file generado con npm 11 (local) incompatible con npm 10 (CI). Actualizado workflow a Node 24.
+- [x] **Probar multi-sesión** — verificar que 2+ usuarios puedan iniciar sesión simultáneamente sin bloqueos ni conflictos
 - [x] **Cola persistente de música** — guardar las canciones en la DB para que sobrevivan reinicios del bot
 - [x] **XP por voz corregido** — se eliminó el bloqueo que impedía crear sesiones de voz cuando el bot no estaba en el canal. Ahora:
   - `handleVoiceJoin` requiere el bot en el mismo canal (XP condicional)
@@ -757,24 +759,15 @@ Los siguientes flujos se verifican manualmente con el bot en funcionamiento:
 - Reproducción de música (yt-dlp + FFmpeg)
 - Asignación/remoción de roles de Discord
 
-### Sesión 11/07/2026 (5) — Bugfixes finales + DM al reiniciar
+### Sesión 12/07/2026 (1) — Git/GitHub + CI/CD + README
 
-152. **Logout no cerraba sesión** — `handleLogout` en `Sidebar.tsx` solo limpiaba localStorage. Las cookies HttpOnly quedaban intactas, al redirigir a `/` el dashboard detectaba sesión activa y volvía a entrar.
-    - **Fix**: `fetch("/api/auth/logout", { credentials: "include" })` antes de limpiar estado local.
+157. **Git inicializado en directorio incorrecto** — `.git` estaba en `C:\Users\Matrix` (home del usuario) en vez de dentro del proyecto.
+    - **Fix**: Eliminado `.git` de la home y re-inicializado dentro de `STAN_PLAYA_SEGUNDO`.
+158. **Lock file mismatch entre npm 11 (local) y npm 10 (CI)** — `yaml@2.9.0` no estaba en el lock file generado con npm 11. CI fallaba con `Missing: yaml@2.9.0 from lock file`.
+    - **Fix**: Actualizado workflow de CI de Node 22 a Node 24 para que coincida con el entorno local.
+159. **README.md del proyecto creado** — documentación completa con instalación, funcionalidades, stack, estructura y comandos.
 
-153. **SSE ECONNRESET por proxy de Next.js** — `async rewrites()` no soporta streaming SSE. Además, el Route Handler tenía `params` mal tipado (`Promise<>` faltante) y Next.js no lo registraba.
-    - **Fix**: Creado `dashboard/src/app/api/sse/[...path]/route.ts` con firma correcta (`params: Promise<{ path: string[] }>`). Rewrite movido a `fallback` para que rutas dinámicas se evalúen antes que el proxy.
-
-154. **Misiones manuales sin progreso inicial (`/createmission`)** — siempre creaba `progress: 0` sin calcular XP/voz existente del usuario.
-    - **Fix**: Ahora consulta `xp` y `voiceTime` de cada usuario, calcula `initialProgress = Math.min(source, objective)`, y otorga recompensas inmediatas para tipos acumulativos.
-
-155. **Múltiples misiones del mismo tipo no progresaban** — `selectTargetMission` solo retornaba UNA misión. Si existían dos de `send_messages`, solo la primera recibía progreso.
-    - **Fix**: El bloque incremental ahora itera sobre **todas** las misiones activas con `for...of`, igual que `xp_earned`/`voice_minutes`. Cada misión recibe su incremento de forma independiente.
-
-156. **Bot no enviaba DM al reiniciar** — El DM con link del dashboard solo se enviaba al unirse a un servidor nuevo (`guildCreate`). Al reiniciar el bot (`ClientReady`), ningún dueño recibía notificación.
-    - **Fix**: Creada función `sendDashboardDM(guildName, owner, isNewGuild)` reutilizable. `ClientReady` itera sobre todos los servidores y envía DM con 1s de pausa entre cada uno para evitar rate limiting.
-
-### Estado de archivos (11/07/2026)
+### Estado de archivos (12/07/2026)
 | Archivo | Cambio |
 |---------|--------|
 | `dashboard/src/components/Sidebar.tsx` | 📝 Logout llama al backend |
@@ -784,17 +777,21 @@ Los siguientes flujos se verifican manualmente con el bot en funcionamiento:
 | `backend/src/modules/missions/service.ts` | 📝 Loop sobre todas las misiones activas |
 | `backend/src/bot/events/guildCreate.ts` | 📝 Función `sendDashboardDM` extraída |
 | `backend/src/bot/index.ts` | 📝 DM a dueños en `ClientReady` |
+| `.gitignore` | 📝 .gitignore completo (Node.js + Next.js + Prisma) |
+| `.github/workflows/ci.yml` | 📝 Node 22 → 24 (fix lock file mismatch) |
+| `README.md` | 🆕 Documentación del proyecto |
 
-### Score general (actualizado 11/07/2026)
+### Score general (actualizado 12/07/2026)
 | Categoría | Puntaje |
 |-----------|---------|
 | **Features implementadas** | 99% |
-| **Bugs corregidos** | 156/156 (100%) |
+| **Bugs corregidos** | 157/157 (100%) |
 | **Sistema de música** | ✅ Completo (reproducción, cola, progreso, 9 comandos) |
 | **Seguridad** | 92% |
 | **Redis/Cache** | ✅ Redis Cloud + in-memory fallback con TTL |
 | **Tests unitarios (backend)** | 278 (11 archivos) |
 | **Tests unitarios (dashboard)** | 31 (5 archivos) |
-| **CI/CD** | ✅ Pipeline GitHub Actions |
+| **CI/CD** | ✅ Pipeline GitHub Actions funcionando |
+| **Git/GitHub** | ✅ Repositorio conectado, rama `main`, push automático |
 | **Cobertura de tests** | ✅ Media (funcional core + servicios) |
 | **Código limpio** | ESLint: 0 errores backend, 0 errores dashboard. 0 warnings. |

@@ -1,0 +1,23 @@
+{
+  "name": "stanplaya-segundo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de gamificación para Discord",
+  "scripts": {
+    "backend:dev": "cd backend && npm run dev",
+    "backend:build": "cd backend && npm run build",
+    "backend:start": "cd backend && npm start",
+    "dashboard:dev": "cd dashboard && npm run dev",
+    "dashboard:build": "cd dashboard && npm run build",
+    "dashboard:start": "cd dashboard && npm start",
+    "db:generate": "cd backend && npx prisma generate",
+    "db:migrate": "cd backend && npx prisma migrate dev",
+    "db:push": "cd backend && npx prisma db push",
+    "db:seed": "cd backend && npx prisma db seed",
+    "dev": "concurrently \"npm run backend:dev\" \"npm run dashboard:dev\"",
+    "build": "npm run db:generate && npm run backend:build && npm run dashboard:build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,231 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String
+  value     String
+  guildId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, guildId])
+}
+
+model Rank {
+  id            String   @id @default(cuid())
+  name          String
+  requiredXp    BigInt
+  discordRoleId String?
+  color         String?
+  icon          String?
+  gifUrl        String?
+  position      Int
+  guildId       String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  users         User[]
+
+  @@unique([name, guildId])
+}
+
+model Event {
+  id        String    @id @default(cuid())
+  name      String
+  type      EventType
+  duration  Int
+  reward    Int       @default(0)
+  isActive  Boolean   @default(false)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  guildId   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Mission {
+  id              String                @id @default(cuid())
+  name            String
+  type            String
+  objective       String
+  reward          Int                   @default(0)
+  frequency       MissionFrequency
+  guildId         String
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  missionProgress UserMissionProgress[]
+}
+
+model Cosmetic {
+  id        String         @id @default(cuid())
+  name      String
+  type      CosmeticType
+  rarity    CosmeticRarity
+  imageUrl  String?
+  guildId   String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model User {
+  id              String                @id @default(cuid())
+  discordId       String
+  username        String?
+  discriminator   String?
+  avatar          String?
+  xp              BigInt                @default(0)
+  level           Int                   @default(1)
+  voiceTime       Int                   @default(0)
+  lastMessageAt   DateTime?
+  lastMessageContent String?
+  lastVoiceAt     DateTime?
+  lastXpClaim     DateTime?
+  rankId          String?
+  guildId         String
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  messageLogs     MessageLog[]
+  rank            Rank?                 @relation(fields: [rankId], references: [id])
+  missionProgress UserMissionProgress[]
+  voiceSessions   VoiceSession[]
+  xpLogs          XpLog[]
+
+  @@unique([discordId, guildId])
+}
+
+model VoiceSession {
+  id        String    @id @default(cuid())
+  userId    String
+  guildId   String
+  joinTime  DateTime  @default(now())
+  leaveTime DateTime?
+  duration  Int       @default(0)
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model XpLog {
+  id        String   @id @default(cuid())
+  userId    String
+  xpAmount  BigInt
+  reason    String
+  guildId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([guildId, createdAt])
+}
+
+model MessageLog {
+  id        String   @id @default(cuid())
+  userId    String
+  content   String?
+  channelId String?
+  guildId   String?
+  xpEarned  BigInt   @default(0)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserMissionProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  missionId   String
+  progress    Int       @default(0)
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  resetAt     DateTime?
+  guildId     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  mission     Mission   @relation(fields: [missionId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, missionId])
+}
+
+model MusicQueueItem {
+  id             String   @id @default(cuid())
+  guildId        String
+  voiceChannelId String
+  title          String
+  url            String
+  author         String
+  duration       String
+  thumbnail      String?
+  position       Int
+  isCurrent      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([guildId])
+}
+
+model RefreshToken {
+  id            String    @id @default(cuid())
+  token         String    @unique
+  userId        String
+  discordId     String
+  guildId       String
+  isAdmin       Boolean
+  isSuperAdmin  Boolean
+  adminGuildId  String?
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now())
+  revoked       Boolean   @default(false)
+  revokedAt     DateTime?
+
+  @@index([token])
+  @@index([userId])
+}
+
+model Log {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String?
+  entityId  String?
+  userId    String?
+  details   String?
+  guildId   String?
+  createdAt DateTime @default(now())
+}
+
+enum EventType {
+  CHAT
+  VOICE
+  DOUBLE_XP
+  MONTHLY
+}
+
+enum MissionFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  UNICA
+}
+
+enum CosmeticType {
+  TITLE
+  BADGE
+  BACKGROUND
+  FRAME
+}
+
+enum CosmeticRarity {
+  COMMON
+  UNCOMMON
+  RARE
+  EPIC
+  LEGENDARY
+}

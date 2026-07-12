@@ -125,7 +125,7 @@ Home (login OAuth2 + admin login) → Dashboard (stats) → **Control de Acceso*
 - Backend API proxyeado a través de Next.js rewrite (`/api/*` → `http://localhost:4000/api/*`)
 - Todas las llamadas del navegador al backend son same-origin (sin CORS)
 
-## Bugs corregidos (151)
+## Bugs corregidos (158)
 
 ### Originales (35)
 1. `endsAt` no se guardaba al activar evento → eventos nunca se detectaban como activos
@@ -759,13 +759,16 @@ Los siguientes flujos se verifican manualmente con el bot en funcionamiento:
 - Reproducción de música (yt-dlp + FFmpeg)
 - Asignación/remoción de roles de Discord
 
-### Sesión 12/07/2026 (1) — Git/GitHub + CI/CD + README
+### Sesión 12/07/2026 (3) — Git/GitHub + CI/CD + Documentación
 
 157. **Git inicializado en directorio incorrecto** — `.git` estaba en `C:\Users\Matrix` (home del usuario) en vez de dentro del proyecto.
     - **Fix**: Eliminado `.git` de la home y re-inicializado dentro de `STAN_PLAYA_SEGUNDO`.
 158. **Lock file mismatch entre npm 11 (local) y npm 10 (CI)** — `yaml@2.9.0` no estaba en el lock file generado con npm 11. CI fallaba con `Missing: yaml@2.9.0 from lock file`.
     - **Fix**: Actualizado workflow de CI de Node 22 a Node 24 para que coincida con el entorno local.
 159. **README.md del proyecto creado** — documentación completa con instalación, funcionalidades, stack, estructura y comandos.
+
+### Docs agregados
+- **README.md** documentación pública del proyecto en GitHub
 
 ### Estado de archivos (12/07/2026)
 | Archivo | Cambio |
@@ -785,7 +788,7 @@ Los siguientes flujos se verifican manualmente con el bot en funcionamiento:
 | Categoría | Puntaje |
 |-----------|---------|
 | **Features implementadas** | 99% |
-| **Bugs corregidos** | 157/157 (100%) |
+| **Bugs corregidos** | 158/158 (100%) |
 | **Sistema de música** | ✅ Completo (reproducción, cola, progreso, 9 comandos) |
 | **Seguridad** | 92% |
 | **Redis/Cache** | ✅ Redis Cloud + in-memory fallback con TTL |

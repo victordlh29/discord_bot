@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 title Deploy Bot - JustRunMy.app
 
 :: ==========================================
@@ -21,17 +22,24 @@ if not exist %CACHE_FILE% (
     echo  PRIMERA VEZ - Configurar URL
     echo ==========================================
     echo.
-    echo Pega la URL que te dio JustRunMy.app:
+    echo Pega SOLO la URL que te da JustRunMy.app:
     echo (la que empieza con https://...@justrunmy.app/git/...)
     echo.
+    echo   Ejemplo correcto: https://user:pass@justrunmy.app/git/abc123
+    echo.
     set /p JUSTRUNMY_URL="URL: "
-    if "%JUSTRUNMY_URL%"=="" (
+    if "!JUSTRUNMY_URL!"=="" (
         echo [ERROR] No ingresaste URL
         pause
         exit /b 1
     )
-    >%CACHE_FILE% echo %JUSTRUNMY_URL%
-    echo [OK] URL guardada. Proxima vez solo haz doble clic.
+    :: Limpiar por si pegaron el comando completo "git push -u https://... HEAD:deploy"
+    set JUSTRUNMY_URL=!JUSTRUNMY_URL:git push -u =!
+    set JUSTRUNMY_URL=!JUSTRUNMY_URL:git push =!
+    set JUSTRUNMY_URL=!JUSTRUNMY_URL: HEAD:deploy=!
+    set JUSTRUNMY_URL=!JUSTRUNMY_URL:"=!
+    >%CACHE_FILE% echo !JUSTRUNMY_URL!
+    echo [OK] URL guardada como: !JUSTRUNMY_URL!
     echo.
 ) else (
     set /p JUSTRUNMY_URL=<%CACHE_FILE%
@@ -49,6 +57,7 @@ echo   [OK]
 
 :: ---- Push ----
 echo [3/3] Subiendo a JustRunMy.app...
+echo   URL: %JUSTRUNMY_URL%
 git push "%JUSTRUNMY_URL%" HEAD:deploy
 
 if %errorlevel% equ 0 (

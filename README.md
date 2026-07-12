@@ -245,4 +245,6 @@ MIT
 
 <p align="center">
   <sub>Hecho con ❤️ por <a href="https://github.com/victordlh29">victordlh29</a></sub>
+  <br>
+  <sub>🛡️ Protegido con pre-push hook — los tests se ejecutan antes de cada push</sub>
 </p>

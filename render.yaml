@@ -1,0 +1,78 @@
+# ============================================================
+# render.yaml — Blueprint de Render (Infrastructure as Code)
+# 
+# Uso: Conectar repo a Render → Deploy automático
+# O: render blueprint deploy (CLI)
+# ============================================================
+
+services:
+  # ── Backend + Bot Discord ──
+  - type: web
+    name: stanplaya-backend
+    env: docker
+    repo: https://github.com/victordlh29/discord_bot
+    branch: main
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_PORT
+        value: "4000"
+      - key: DISCORD_BOT_TOKEN
+        sync: false  # Lo pones manual en el dashboard
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: stanplaya-db
+          property: connectionString
+      - key: DASHBOARD_URL
+        value: https://stanplaya-dashboard.onrender.com  # CAMBIA esto
+      - key: SUPERADMIN_USER
+        sync: false
+      - key: SUPERADMIN_PASSWORD
+        sync: false
+      - key: SWAGGER_ENABLED
+        value: "false"
+
+  # ── Dashboard ──
+  - type: web
+    name: stanplaya-dashboard
+    env: docker
+    repo: https://github.com/victordlh29/discord_bot
+    branch: main
+    dockerfilePath: ./dashboard/Dockerfile
+    dockerContext: ./dashboard
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_DISCORD_CLIENT_ID
+        value: "TU_DISCORD_CLIENT_ID_AQUI"  # ⬅️ REEMPLAZA con tu Client ID real
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_DISCORD_REDIRECT_URI
+        value: https://stanplaya-dashboard.onrender.com/auth/callback  # CAMBIA esto
+      - key: API_KEY
+        sync: false
+      - key: BACKEND_URL
+        value: https://stanplaya-backend.onrender.com  # CAMBIA esto
+      - key: API_URL
+        value: https://stanplaya-backend.onrender.com  # ⬅️ REEMPLAZA con la URL de tu backend en Render
+      - key: NEXT_PUBLIC_API_URL
+        value: /api
+      - key: NEXT_PUBLIC_BACKEND_URL
+        value: https://stanplaya-backend.onrender.com  # ⬅️ REEMPLAZA igual que API_URL
+
+databases:
+  - name: stanplaya-db
+    databaseName: stanplaya
+    plan: starter  # $7/mes, 1GB
+    region: ohio   # USA (mejor latencia global)

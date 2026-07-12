@@ -174,7 +174,10 @@ async function playNow(entry: ActivePlayerEntry, track: TrackInfo) {
     format: "140",
     output: "-",
     noCheckCertificates: true,
-    bufferSize: "64K",
+    noPlaylist: true,
+    retries: 3,
+    bufferSize: "128K",
+    httpChunkSize: "64K",
   }, { stdio: ["ignore", "pipe", "pipe"] });
   dl.catch((err: unknown) => {
     // yt-dlp killed with SIGTERM is expected — only log non-signal errors
@@ -187,11 +190,15 @@ async function playNow(entry: ActivePlayerEntry, track: TrackInfo) {
   if (!dl.stdout) throw new Error("yt-dlp stdout is null");
 
   const ff = spawn(ffmpegPath!, [
+    "-fflags", "nobuffer",
+    "-analyzeduration", "0",
+    "-probesize", "32",
     "-i", "-",
     "-f", "s16le",
     "-ar", "48000",
     "-ac", "2",
-    "pipe:1",
+    "-loglevel", "error",
+    "-",
   ], { stdio: ["pipe", "pipe", "pipe"] });
 
   dl.stdout.pipe(ff.stdin!);
@@ -229,7 +236,7 @@ async function playNow(entry: ActivePlayerEntry, track: TrackInfo) {
         logger.warn(`Pre-buffer timeout for ${track.title}, starting anyway`);
       }
       resolve();
-    }, 30_000);
+    }, 25_000);
 
     pcmStream.once("data", () => {
       dataReceived = true;

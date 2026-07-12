@@ -15,7 +15,7 @@
     "db:push": "cd backend && npx prisma db push",
     "db:seed": "cd backend && npx prisma db seed",
     "dev": "concurrently \"npm run backend:dev\" \"npm run dashboard:dev\"",
-    "build": "npm run db:generate && npm run backend:build && npm run dashboard:build"
+    "build": "npm run backend:build && npm run dashboard:build"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

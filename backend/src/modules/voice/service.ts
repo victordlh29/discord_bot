@@ -367,36 +367,42 @@ export async function processActiveVoiceSessions(): Promise<void> {
       include: { user: true },
     });
 
+    if (sessions.length === 0) return;
+
     const client = getClient();
     if (!client) return;
 
-    await Promise.all(sessions.map(async (session) => {
+    const now = new Date();
+    const updates: Array<{ id: string; leaveTime: Date; duration: number }> = [];
+
+    for (const session of sessions) {
       try {
         const guild = client.guilds.cache.get(session.guildId);
         const member = guild ? await guild.members.fetch(session.user.discordId).catch(() => null) : null;
         if (!member || !member.voice?.channelId) {
-          const now = new Date();
           const durationSec = Math.floor((now.getTime() - session.joinTime.getTime()) / 1000);
-          await prisma.voiceSession.update({
-            where: { id: session.id },
-            data: {
-              leaveTime: now,
-              duration: Math.floor(durationSec / 60),
-            },
+          updates.push({
+            id: session.id,
+            leaveTime: now,
+            duration: Math.floor(durationSec / 60),
           });
-          logger.info(`Voice session ${session.id} auto-closed (user left while bot was away)`);
         }
       } catch (error) {
         logger.warn(`Failed to auto-close voice session ${session.id}`, { error: String(error) });
-        await prisma.voiceSession.update({
-          where: { id: session.id },
-          data: { leaveTime: new Date(), duration: 0 },
-        });
+        updates.push({ id: session.id, leaveTime: new Date(), duration: 0 });
       }
-    }));
+    }
 
-    if (sessions.length > 0) {
-      logger.info(`Cleaned up ${sessions.length} orphaned voice sessions`);
+    if (updates.length > 0) {
+      await prisma.$transaction(
+        updates.map((u) =>
+          prisma.voiceSession.update({
+            where: { id: u.id },
+            data: { leaveTime: u.leaveTime, duration: u.duration },
+          })
+        )
+      );
+      logger.info(`Cleaned up ${updates.length} orphaned voice sessions`);
     }
   } finally {
     isProcessingVoiceSessions = false;

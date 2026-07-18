@@ -593,19 +593,21 @@ export async function checkAndResetMissions(): Promise<void> {
     take: 10000,
   });
 
-  await Promise.all(expired.map((item) =>
-    prisma.userMissionProgress.update({
-      where: { id: item.id },
-      data: {
-        progress: 0,
-        completed: false,
-        completedAt: null,
-        resetAt: getResetDate(item.mission.frequency),
-      },
-    })
-  ));
+  if (expired.length === 0) return;
 
-  if (expired.length > 0) {
-    logger.info(`Reset ${expired.length} expired mission progress entries`);
-  }
+  await prisma.$transaction(
+    expired.map((item) =>
+      prisma.userMissionProgress.update({
+        where: { id: item.id },
+        data: {
+          progress: 0,
+          completed: false,
+          completedAt: null,
+          resetAt: getResetDate(item.mission.frequency),
+        },
+      })
+    )
+  );
+
+  logger.info(`Reset ${expired.length} expired mission progress entries`);
 }

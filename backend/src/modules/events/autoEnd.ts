@@ -12,12 +12,18 @@ export async function autoEndExpiredEvents(): Promise<void> {
     take: 1000,
   });
 
-  await Promise.all(expired.map(async (event) => {
-    await prisma.event.update({
-      where: { id: event.id },
-      data: { isActive: false },
-    });
+  if (expired.length === 0) return;
 
+  await prisma.$transaction(
+    expired.map((event) =>
+      prisma.event.update({
+        where: { id: event.id },
+        data: { isActive: false },
+      })
+    )
+  );
+
+  for (const event of expired) {
     invalidateActiveEventsCache(event.guildId);
 
     try {
@@ -26,5 +32,5 @@ export async function autoEndExpiredEvents(): Promise<void> {
     } catch (error) {
       logger.error(`Failed to announce event end for "${event.name}"`, { error: String(error) });
     }
-  }));
+  }
 }
